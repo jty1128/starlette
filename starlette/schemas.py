@@ -19,9 +19,9 @@ class OpenAPIResponse(Response):
 
     def render(self, content: typing.Any) -> bytes:
         assert yaml is not None, "`pyyaml` must be installed to use OpenAPIResponse."
-        assert isinstance(
-            content, dict
-        ), "The schema passed to OpenAPIResponse should be a dictionary."
+        assert isinstance(content, dict), (
+            "The schema passed to OpenAPIResponse should be a dictionary."
+        )
         return yaml.dump(content, default_flow_style=False).encode("utf-8")
 
 
@@ -32,10 +32,14 @@ class EndpointInfo(typing.NamedTuple):
 
 
 class BaseSchemaGenerator:
-    def get_schema(self, routes: list[BaseRoute]) -> dict[str, typing.Any]:
+    def get_schema(
+        self, routes: typing.List[BaseRoute]
+    ) -> typing.Dict[str, typing.Any]:
         raise NotImplementedError()  # pragma: no cover
 
-    def get_endpoints(self, routes: list[BaseRoute]) -> list[EndpointInfo]:
+    def get_endpoints(
+        self, routes: typing.List[BaseRoute]
+    ) -> typing.List[EndpointInfo]:
         """
         Given the routes, yields the following information:
 
@@ -46,7 +50,7 @@ class BaseSchemaGenerator:
         - func
             method ready to extract the docstring
         """
-        endpoints_info: list[EndpointInfo] = []
+        endpoints_info: typing.List[EndpointInfo] = []
 
         for route in routes:
             if isinstance(route, (Mount, Host)):
@@ -97,7 +101,7 @@ class BaseSchemaGenerator:
 
     def parse_docstring(
         self, func_or_method: typing.Callable[..., typing.Any]
-    ) -> dict[str, typing.Any]:
+    ) -> typing.Dict[str, typing.Any]:
         """
         Given a function, parse the docstring as YAML and return a dictionary of info.
         """
@@ -128,10 +132,12 @@ class BaseSchemaGenerator:
 
 
 class SchemaGenerator(BaseSchemaGenerator):
-    def __init__(self, base_schema: dict[str, typing.Any]) -> None:
+    def __init__(self, base_schema: typing.Dict[str, typing.Any]) -> None:
         self.base_schema = base_schema
 
-    def get_schema(self, routes: list[BaseRoute]) -> dict[str, typing.Any]:
+    def get_schema(
+        self, routes: typing.List[BaseRoute]
+    ) -> typing.Dict[str, typing.Any]:
         schema = dict(self.base_schema)
         schema.setdefault("paths", {})
         endpoints_info = self.get_endpoints(routes)
