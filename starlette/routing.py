@@ -55,7 +55,9 @@ def iscoroutinefunction_or_partial(obj: typing.Any) -> bool:  # pragma: no cover
 
 
 def request_response(
-    func: typing.Callable[[Request], typing.Union[typing.Awaitable[Response], Response]]
+    func: typing.Callable[
+        [Request], typing.Union[typing.Awaitable[Response], Response]
+    ],
 ) -> ASGIApp:
     """
     Takes a function or coroutine `func(request) -> response`,
@@ -78,7 +80,7 @@ def request_response(
 
 
 def websocket_session(
-    func: typing.Callable[[WebSocket], typing.Awaitable[None]]
+    func: typing.Callable[[WebSocket], typing.Awaitable[None]],
 ) -> ASGIApp:
     """
     Takes a coroutine `func(session)`, and returns an ASGI application.
@@ -143,9 +145,9 @@ def compile_path(
     for match in PARAM_REGEX.finditer(path):
         param_name, convertor_type = match.groups("str")
         convertor_type = convertor_type.lstrip(":")
-        assert (
-            convertor_type in CONVERTOR_TYPES
-        ), f"Unknown path convertor '{convertor_type}'"
+        assert convertor_type in CONVERTOR_TYPES, (
+            f"Unknown path convertor '{convertor_type}'"
+        )
         convertor = CONVERTOR_TYPES[convertor_type]
 
         path_regex += re.escape(path[idx : match.start()])
@@ -394,9 +396,9 @@ class Mount(BaseRoute):
         middleware: typing.Optional[typing.Sequence[Middleware]] = None,
     ) -> None:
         assert path == "" or path.startswith("/"), "Routed paths must start with '/'"
-        assert (
-            app is not None or routes is not None
-        ), "Either 'app=...', or 'routes=' must be specified"
+        assert app is not None or routes is not None, (
+            "Either 'app=...', or 'routes=' must be specified"
+        )
         self.path = path.rstrip("/")
         if app is not None:
             self._base_app: ASGIApp = app
@@ -422,10 +424,7 @@ class Mount(BaseRoute):
             root_path = scope.get("route_root_path", scope.get("root_path", ""))
             route_path = scope.get("route_path", re.sub(r"^" + root_path, "", path))
             mount_match = self.path_regex.match(route_path)
-            path_match = self.routes == [] or any(
-                [route.matches(scope)[0] == Match.FULL for route in self.routes]
-            )
-            if mount_match and path_match:
+            if mount_match:
                 matched_params = mount_match.groupdict()
                 for key, value in matched_params.items():
                     matched_params[key] = self.param_convertors[key].convert(value)
@@ -436,6 +435,7 @@ class Mount(BaseRoute):
                 root_path = scope.get("root_path", "")
                 child_scope = {
                     "path_params": path_params,
+                    "root_path": root_path + matched_path,
                     "route_root_path": root_path + matched_path,
                     "route_path": remaining_path,
                     "endpoint": self.app,
